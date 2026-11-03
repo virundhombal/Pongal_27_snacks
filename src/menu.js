@@ -10,7 +10,7 @@ const f = (id, name, custom) => ({ id, name, img: `feast/${id}.webp`, link: link
 export const SNACKS = {
   title: 'Diwali × Pongal Snacks',
   info: { venue: 'Main Mess', date: '12 Nov 2026', time: '5:00 PM onwards' },
-  items: [s('kothu-parotta', 'Kothu Parotta'), s('soda-sarbath', 'Soda Sarbath')],
+  items: [{ ...s('kothu-parotta', 'Kothu Parotta'), veg: true }, s('soda-sarbath', 'Soda Sarbath')],
 };
 
 export const FEAST = {

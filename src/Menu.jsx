@@ -2,6 +2,21 @@ import { useState } from 'react';
 import { FEAST, SNACKS } from './menu.js';
 import { asset } from './ui.jsx';
 
+// Standard Indian veg mark: green-bordered square with a green dot.
+const VegMark = () => (
+  <svg
+    role="img"
+    aria-label="Vegetarian"
+    width="14"
+    height="14"
+    viewBox="0 0 14 14"
+    style={{ display: 'inline-block', verticalAlign: '-2px', marginRight: 6, flexShrink: 0 }}
+  >
+    <rect x="0.75" y="0.75" width="12.5" height="12.5" rx="1.5" fill="#fff" stroke="#0f8a3c" strokeWidth="1.5" />
+    <circle cx="7" cy="7" r="3.5" fill="#0f8a3c" />
+  </svg>
+);
+
 // Feast lettering sits on the poster yellow (its white lettering needs it); text if the image is missing.
 function FeastTitle() {
   const [bad, setBad] = useState(false);
@@ -28,7 +43,7 @@ function Dish({ item }) {
         <span className="dish-img">
           {ok && <img src={src} alt="" loading="lazy" decoding="async" onError={() => setOk(false)} />}
         </span>
-        <span className="dish-name">{item.name}</span>
+        <span className="dish-name">{item.veg && <VegMark />}{item.name}</span>
       </>
     );
   return (

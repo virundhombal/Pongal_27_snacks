@@ -98,7 +98,7 @@ footer{text-align:center;margin-top:26px;opacity:.8;font-size:.9rem}
 
 /* Dish photos come with the name baked in (transparent background) */
 .dishes{align-items:center}
-.dish-photo{display:block;width:100%;max-width:150px;height:auto}
+.dish-photo{display:block;width:100%;max-width:150px;aspect-ratio:1;height:auto;object-fit:contain}
 
 .dishes.big .dish-name{font-size:1rem}
 
