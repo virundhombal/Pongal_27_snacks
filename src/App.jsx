@@ -33,30 +33,53 @@ function check(f) {
   return '';
 }
 
+// Poster lettering on the first screen; plain text if the image can't load.
+function SnacksTitle({ fallback }) {
+  const [bad, setBad] = useState(false);
+  if (bad) return fallback;
+  return (
+    <h1 className="title-h">
+      <img className="title-img" src={asset('title-snacks.webp')} alt="Diwali × Pongal Snacks" onError={() => setBad(true)} />
+    </h1>
+  );
+}
+
 function Header({ framed }) {
-  const text = (
-    <>
-      <TeamPongal />
-      <h1 className="display title">
-        Diwali <span className="x">&times;</span>
-        <br />Pongal<br />
-        <span className="gold">Snacks</span>
-      </h1>
-      <p className="meta">Main Mess &middot; 12 Nov 2026 &middot; 5:00 PM onwards</p>
-    </>
+  const textTitle = (
+    <h1 className="display title">
+      Diwali <span className="x">&times;</span>
+      <br />Pongal<br />
+      <span className="gold">Snacks</span>
+    </h1>
+  );
+  const meta = (
+    <p className="meta">
+      <span>Main Mess &middot; 12 Nov 2026</span>
+      <span className="sep"> &middot; </span>
+      <span>5:00 PM onwards</span>
+    </p>
   );
   if (framed) {
     return (
       <div className="frame">
         <Img src="garland.webp" className="frame-img" loading="eager" />
-        <header className="hero">{text}</header>
+        <Img src="diya-hanging.webp" className="frame-diya" loading="eager" />
+        <header className="hero">
+          <TeamPongal />
+          <SnacksTitle fallback={textTitle} />
+          {meta}
+        </header>
       </div>
     );
   }
   return (
     <>
       <div className="strip" style={{ backgroundImage: `url(${asset('garland.webp')})` }} aria-hidden="true" />
-      <header className="hero small">{text}</header>
+      <header className="hero small">
+        <TeamPongal />
+        {textTitle}
+        {meta}
+      </header>
     </>
   );
 }
@@ -238,6 +261,7 @@ export default function App() {
                 : 'Your Snacks QR code is on its way to your email.'}
             </p>
             <p className="hint">It usually arrives within a couple of minutes. Check spam if you can't see it. Show the QR at the counter, one use only.</p>
+            <p className="blessing" lang="ta">“வாழ்க வளமுடன்”</p>
             <button className="btn ghost" onClick={() => { setStep('choose'); setForm({ name: '', rollNumber: '', emailId: '', utrId: '' }); }}>Place another order</button>
           </section>
         )}

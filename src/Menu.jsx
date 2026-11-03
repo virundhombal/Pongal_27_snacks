@@ -2,6 +2,17 @@ import { useState } from 'react';
 import { FEAST, SNACKS } from './menu.js';
 import { asset } from './ui.jsx';
 
+// Feast lettering sits on the poster yellow (its white lettering needs it); text if the image is missing.
+function FeastTitle() {
+  const [bad, setBad] = useState(false);
+  if (bad) return <h3 className="display">{FEAST.title}</h3>;
+  return (
+    <h3 className="feast-banner">
+      <img src={asset('title-feast.webp')} alt={FEAST.title} onError={() => setBad(true)} />
+    </h3>
+  );
+}
+
 // Feast photos already include the dish name, so they are shown as they are.
 // Snack photos (caption: true) are shown in a circle with the name underneath.
 // If a file is missing we keep the circle and the name, so there is never a gap.
@@ -52,7 +63,7 @@ export default function Menu() {
           </>
         ) : (
           <>
-            <h3 className="display">{FEAST.title}</h3>
+            <FeastTitle />
             <Info info={FEAST.info} />
             {FEAST.sections.map((sec) => (
               <div key={sec.name}>
