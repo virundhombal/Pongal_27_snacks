@@ -6,6 +6,22 @@
     <meta name="theme-color" content="#14405f" />
     <title>Diwali x Pongal Snacks</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪔</text></svg>" />
+    <!-- Open the connection to the server right away (DNS + TLS), and start the status request
+         before the app code has even downloaded. App.jsx picks up window.__statusP. -->
+    <link rel="preconnect" href="%VITE_API_URL%" crossorigin />
+    <script>
+      (function () {
+        try {
+          var base = '%VITE_API_URL%';
+          if (!base || base.indexOf('%') === 0) return;
+          window.__statusP = fetch(base.replace(/\/$/, '') + '/api/status').then(function (r) {
+            if (!r.ok) throw new Error('status ' + r.status);
+            return r.json();
+          });
+          window.__statusP.catch(function () {}); // App.jsx retries on its own
+        } catch (e) {}
+      })();
+    </script>
     <link rel="preload" as="image" href="/assets/garland.webp" type="image/webp" />
     <link rel="preload" as="image" href="/assets/title-snacks.webp" type="image/webp" />
     <link rel="preload" as="image" href="/assets/logo-pongal.webp" type="image/webp" />

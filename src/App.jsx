@@ -2,14 +2,15 @@ import { useCallback, useEffect, useState } from 'react';
 import Menu from './Menu.jsx';
 import { FEAST } from './menu.js';
 import { Img, TeamPongal, asset } from './ui.jsx';
+import { FALLBACK } from './fallback.js';
 
 const API = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 async function api(path, options) {
-  // Lookups wait up to 60 s for a slow server; order submissions are never cut short.
+  // Lookups wait up to 90 s for a slow server; order submissions are never cut short.
   const ctrl = new AbortController();
   const isPost = options && options.method === 'POST';
-  const timer = isPost ? null : setTimeout(() => ctrl.abort(), 60000);
+  const timer = isPost ? null : setTimeout(() => ctrl.abort(), 90000);
   let res;
   try {
     // A JSON content-type header makes the browser send an extra "preflight" request first, so only orders (POST) get it.
@@ -90,32 +91,14 @@ function Header({ framed }) {
   );
 }
 
-function Loader({ error }) {
-  const [slow, setSlow] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setSlow(true), 8000);
-    return () => clearTimeout(t);
-  }, []);
-  return (
-    <div className="loader" role="status" aria-live="polite">
-      <span className="spinner" aria-hidden="true" />
-      <p className="loader-title">Loading…</p>
-      <p className="loader-sub">Meanwhile, take a look at the menu below &#8595;</p>
-      {error ? (
-        <p className="loader-err">{error} Trying again…</p>
-      ) : (
-        slow && <p className="loader-err">Still waiting for the server. This is taking longer than usual.</p>
-      )}
-    </div>
-  );
-}
-
-function Choose({ status, error, onChoose }) {
-  if (!status) return <Loader error={error} />;
-  const { prices, combo } = status;
-  const low = combo.offerActive && combo.remaining <= 10;
+function Choose({ status, error, waited, onChoose }) {
+  const live = !!status;
+  const prices = (status || FALLBACK).prices;
+  const combo = status && status.combo;
+  const low = combo && combo.offerActive && combo.remaining <= 10;
   return (
     <section className="cards" aria-label="Choose your option">
+      {/* Snacks has a fixed price, so it works the moment the page opens */}
       <button className="card" onClick={() => onChoose('snacks')}>
         <span className="tag">Snacks only</span>
         <span className="card-title display">Kothu Parotta &amp; Soda Sarbath</span>
@@ -123,26 +106,37 @@ function Choose({ status, error, onChoose }) {
         <span className="cta">Choose &rarr;</span>
       </button>
 
-      <button className="card hot" onClick={() => onChoose('combo')} disabled={combo.closed}>
+      {/* Combo needs the live count of offer spots, so it waits for the server */}
+      <button className="card hot" onClick={() => onChoose('combo')} disabled={!live || combo.closed}>
         <span className="tag gold-tag">Combo</span>
         <span className="card-title display">Snacks + Pongal Feast</span>
         <span className="feast-line">Feast: {FEAST.info.date} &middot; {FEAST.info.venue} &middot; {FEAST.info.time}</span>
-        {combo.closed ? (
-          <span className="price display"><s>₹{prices.comboOffer}</s> Sold out</span>
-        ) : combo.offerActive ? (
-          <span className="price display"><s>₹{prices.comboRegular}</s> ₹{prices.comboOffer}</span>
+        {!live ? (
+          <>
+            <span className="price display checking"><span className="spinner sm" aria-hidden="true" />Checking offer…</span>
+            <span className="claimed">{waited ? 'The server is slow to wake up. Hang on, or order Snacks above.' : 'Checking how many offer spots are left…'}</span>
+            <span className="cta">Please wait…</span>
+          </>
         ) : (
-          <span className="price display"><s>₹{prices.comboOffer}</s> ₹{prices.comboRegular}</span>
+          <>
+            {combo.closed ? (
+              <span className="price display"><s>₹{prices.comboOffer}</s> Sold out</span>
+            ) : combo.offerActive ? (
+              <span className="price display"><s>₹{prices.comboRegular}</s> ₹{prices.comboOffer}</span>
+            ) : (
+              <span className="price display"><s>₹{prices.comboOffer}</s> ₹{prices.comboRegular}</span>
+            )}
+            <span className="claimed">
+              <span className="bar"><i style={{ width: `${Math.min(100, (combo.sold / combo.limit) * 100)}%` }} /></span>
+              {combo.offerActive
+                ? `${combo.sold} of ${combo.limit} offer spots claimed${low ? ` · only ${combo.remaining} left!` : ''}`
+                : `All ${combo.limit} offer spots are gone`}
+            </span>
+            <span className="cta">{combo.closed ? 'Unavailable' : 'Choose →'}</span>
+          </>
         )}
-        <span className="claimed">
-          <span className="bar"><i style={{ width: `${Math.min(100, (combo.sold / combo.limit) * 100)}%` }} /></span>
-          {combo.offerActive
-            ? `${combo.sold} of ${combo.limit} offer spots claimed${low ? ` · only ${combo.remaining} left!` : ''}`
-            : `All ${combo.limit} offer spots are gone`}
-        </span>
-        <span className="cta">{combo.closed ? 'Unavailable' : 'Choose →'}</span>
       </button>
-      {error && <p className="note">{error}</p>}
+      {error && !live && <p className="note">Still trying to reach the server… ({error})</p>}
     </section>
   );
 }
@@ -150,6 +144,7 @@ function Choose({ status, error, onChoose }) {
 export default function App() {
   const [status, setStatus] = useState(null);
   const [statusErr, setStatusErr] = useState('');
+  const [waited, setWaited] = useState(false);
   const [step, setStep] = useState('choose'); // choose | pay | done
   const [option, setOption] = useState(null);
   const [quoted, setQuoted] = useState(null); // price locked in when the student chose
@@ -161,9 +156,23 @@ export default function App() {
   const [copied, setCopied] = useState(false);
 
   const loadStatus = useCallback(async () => {
-    try { setStatus(await api('/api/status')); setStatusErr(''); return true; }
-    catch (e) { setStatusErr(e.message); return false; }
+    try {
+      // index.html already started this request before the app code even loaded
+      const early = window.__statusP;
+      window.__statusP = null;
+      let data;
+      try { data = early ? await early : await api('/api/status'); } catch { data = await api('/api/status'); }
+      setStatus(data); setStatusErr('');
+      return true;
+    } catch (e) { setStatusErr(e.message); return false; }
   }, []);
+
+  // After 6 s without an answer, tell students what is going on
+  useEffect(() => {
+    if (status) return;
+    const t = setTimeout(() => setWaited(true), 6000);
+    return () => clearTimeout(t);
+  }, [status]);
 
   // Refresh every 30 s. If the server doesn't answer, retry every 4 s instead of waiting.
   useEffect(() => {
@@ -177,7 +186,8 @@ export default function App() {
     return () => { stopped = true; clearTimeout(timer); };
   }, [loadStatus]);
 
-  const payee = status && status.payees.find((p) => p.id === payeeId);
+  const payees = (status || FALLBACK).payees;
+  const payee = payees.find((p) => p.id === payeeId);
 
   useEffect(() => {
     if (step !== 'pay' || !payee) return;
@@ -188,9 +198,10 @@ export default function App() {
   }, [step, payee, quoted]);
 
   const choose = (opt) => {
-    const { prices, combo, payees } = status;
+    const { prices } = status || FALLBACK;
+    if (opt === 'combo' && !status) return; // combo price depends on the live offer count
     setOption(opt);
-    setQuoted(opt === 'snacks' ? prices.snacks : combo.offerActive ? prices.comboOffer : prices.comboRegular);
+    setQuoted(opt === 'snacks' ? prices.snacks : status.combo.offerActive ? prices.comboOffer : prices.comboRegular);
     setPayeeId(payees[Math.floor(Math.random() * payees.length)].id); // spread payments across payees
     setError('');
     setStep('pay');
@@ -198,7 +209,7 @@ export default function App() {
   };
 
   const switchPayee = () => {
-    const ids = status.payees.map((p) => p.id);
+    const ids = payees.map((p) => p.id);
     setPayeeId(ids[(ids.indexOf(payeeId) + 1) % ids.length]);
   };
 
@@ -247,7 +258,7 @@ export default function App() {
       <main className="wrap">
         <Header framed={step === 'choose'} />
 
-        {step === 'choose' && <Choose status={status} error={statusErr} onChoose={choose} />}
+        {step === 'choose' && <Choose status={status} error={statusErr} waited={waited} onChoose={choose} />}
         {step === 'choose' && <Menu />}
 
         {step === 'pay' && payee && (
