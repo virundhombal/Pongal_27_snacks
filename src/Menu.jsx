@@ -16,28 +16,39 @@ function FeastTitle() {
 // Feast photos already include the dish name, so they are shown as they are.
 // Snack photos (caption: true) are shown in a circle with the name underneath.
 // If a file is missing we keep the circle and the name, so there is never a gap.
+// Each dish is a link (a web search about the dish, or the page set in menu.js).
 function Dish({ item }) {
   const [ok, setOk] = useState(true);
   const src = asset(item.img);
-  if (ok && !item.caption) {
-    return (
-      <li className="dish">
-        <img className="dish-photo" src={src} alt={item.name} loading="lazy" decoding="async" onError={() => setOk(false)} />
-      </li>
+  const content =
+    ok && !item.caption ? (
+      <img className="dish-photo" src={src} alt={item.name} loading="lazy" decoding="async" onError={() => setOk(false)} />
+    ) : (
+      <>
+        <span className="dish-img">
+          {ok && <img src={src} alt="" loading="lazy" decoding="async" onError={() => setOk(false)} />}
+        </span>
+        <span className="dish-name">{item.name}</span>
+      </>
     );
-  }
   return (
     <li className="dish">
-      <span className="dish-img">
-        {ok && <img src={src} alt="" loading="lazy" decoding="async" onError={() => setOk(false)} />}
-      </span>
-      <span className="dish-name">{item.name}</span>
+      {item.link ? (
+        <a href={item.link} target="_blank" rel="noopener noreferrer" aria-label={`${item.name}: learn more (opens in a new tab)`}>
+          {content}
+        </a>
+      ) : (
+        content
+      )}
     </li>
   );
 }
 
 const Info = ({ info }) => (
-  <p className="menu-info">{info.venue} &middot; {info.date} &middot; {info.time}</p>
+  <>
+    <p className="menu-info">{info.venue} &middot; {info.date} &middot; {info.time}</p>
+    <p className="menu-hint">Tap any dish to learn more &#8599;</p>
+  </>
 );
 
 export default function Menu() {

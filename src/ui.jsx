@@ -18,7 +18,7 @@ export function TeamPongal() {
       {bad ? (
         <b className="display" aria-hidden="true">Pongal</b>
       ) : (
-        <img className="team-logo" src={asset('logo-pongal.png')} alt="" onError={() => setBad(true)} />
+        <img className="team-logo" src={asset('logo-pongal.webp')} alt="" onError={() => setBad(true)} />
       )}
       <span aria-hidden="true">presents</span>
     </div>

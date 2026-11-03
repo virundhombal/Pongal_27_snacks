@@ -1,8 +1,11 @@
 // Menu content from the posters. Image files go in public/assets/ (see README of assets):
 //   snacks/<id>.webp  and  feast/<id>.webp. A missing image just shows a plain circle.
 // caption: true = the photo has no name on it, so the page adds one underneath
-const s = (id, name) => ({ id, name, img: `snacks/${id}.webp`, caption: true });
-const f = (id, name) => ({ id, name, img: `feast/${id}.webp` });
+// Tapping a dish opens a web search about it. Give a URL as a 3rd argument to link a specific page instead, or null for no link.
+const search = (name) => `https://www.google.com/search?q=${encodeURIComponent(`${name} Tamil Nadu food`)}`;
+const linkFor = (name, custom) => (custom === undefined ? search(name) : custom);
+const s = (id, name, custom) => ({ id, name, img: `snacks/${id}.webp`, caption: true, link: linkFor(name, custom) });
+const f = (id, name, custom) => ({ id, name, img: `feast/${id}.webp`, link: linkFor(name, custom) });
 
 export const SNACKS = {
   title: 'Diwali × Pongal Snacks',
@@ -33,7 +36,7 @@ export const FEAST = {
       name: 'Sides',
       items: [
         f('appalam', 'Appalam'), f('paruppu-podi', 'Paruppu Podi'), f('dried-curd-chilli', 'Dried Curd Chilli'),
-        f('mango-pickle', 'Mango Pickle'), f('pulichakeerai-pickle', 'Pulichakeerai Pickle'), f('salt', 'Salt'),
+        f('mango-pickle', 'Mango Pickle'), f('pulichakeerai-pickle', 'Pulichakeerai Pickle'), f('salt', 'Salt', null),
       ],
     },
     {

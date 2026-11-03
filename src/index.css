@@ -3,7 +3,7 @@
 body{margin:0;min-height:100vh;font-family:'DM Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:var(--cream);
   background:radial-gradient(900px 420px at 50% -80px,#21608d 0,transparent 70%),var(--navy)}
 .display{font-family:'Bagel Fat One','Arial Black',Impact,sans-serif;font-weight:400;letter-spacing:.01em}
-.wrap{max-width:520px;margin:0 auto;padding:8px 18px 40px}
+.wrap{max-width:520px;margin:0 auto;padding:0 18px 40px}
 .hero{text-align:center;padding:14px 0 8px}
 .kicker{font-size:.9rem;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
 .title{font-size:clamp(2.3rem,11vw,3.4rem);line-height:1.02;margin:10px 0 8px;color:var(--gold)}
@@ -55,7 +55,7 @@ footer{text-align:center;margin-top:26px;opacity:.8;font-size:.9rem}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
 /* Team [logo] presents */
-.team-line{display:flex;justify-content:center;align-items:center;gap:10px;font-size:1.05rem;opacity:.95}
+.team-line{display:flex;justify-content:center;align-items:baseline;gap:10px;font-size:1.15rem;font-weight:600}
 .team-logo{height:34px;width:auto;display:block}
 .feast-line{font-size:.85rem;font-weight:700;opacity:.85}
 
@@ -84,15 +84,15 @@ footer{text-align:center;margin-top:26px;opacity:.8;font-size:.9rem}
 /* Garland frame (full arch on the first screen, a thin strip afterwards) */
 .title .gold{display:inline}
 .frame{position:relative;margin:0 -18px;aspect-ratio:850/710;container-type:inline-size}
-.frame-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none}
+.frame-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;transform:translateY(-1.8%)}
 .frame .hero{position:absolute;left:17%;right:17%;top:24%;padding:0;display:flex;flex-direction:column;align-items:stretch}
 .frame .title{font-size:clamp(1.9rem,9.5vw,3rem);font-size:10cqw;margin:4px 0}
 .frame .meta{font-size:clamp(.8rem,3.6vw,1.1rem);font-size:4.2cqw;line-height:1.3;margin:1.5cqw 0 0}
 .frame .meta span{display:block}
 .frame .meta .sep{display:none}
-.frame .team-line{font-size:clamp(.7rem,3vw,.95rem);font-size:3.3cqw;gap:1.5cqw}
+.frame .team-line{font-size:clamp(.8rem,3.4vw,1.1rem);font-size:3.7cqw;gap:1.2cqw}
 .frame .team-logo{height:6cqw}
-.strip{margin:0 -18px;aspect-ratio:850/180;background-size:100% auto;background-position:top center;background-repeat:no-repeat}
+.strip{margin:0 -18px;aspect-ratio:850/180;background-size:100% auto;background-position:center -6px;background-repeat:no-repeat}
 .hero.small .title{font-size:2rem;margin:8px 0 6px}
 .hero.small br{display:none}
 
@@ -110,8 +110,25 @@ footer{text-align:center;margin-top:26px;opacity:.8;font-size:.9rem}
 .title-h{margin:1.5cqw 0 0;line-height:0;width:100%}
 .title-img{display:block;width:100%;height:auto}
 .frame-diya{position:absolute;right:16%;top:0;width:14%;height:auto;pointer-events:none;z-index:2}
-.feast-banner{background:#f9b40b;border-radius:16px;padding:14px;margin:0 0 6px;display:flex;justify-content:center}
-.feast-banner img{display:block;width:min(100%,220px);height:auto}
+.feast-banner{background:#f9b40b;border-radius:16px;padding:10px 8px;margin:0 0 6px;display:flex;justify-content:center}
+.feast-banner img{display:block;width:min(96%,380px);height:auto}
 
 /* Closing blessing on the done screen */
 .blessing{font-family:'Noto Sans Tamil','Latha','Nirmala UI','Tamil Sangam MN','Noto Sans Tamil UI',sans-serif;font-weight:600;font-size:1.4rem;line-height:1.6;color:var(--red);margin:14px 0 18px}
+
+/* Loader */
+.loader{margin:26px 0 6px;padding:26px 18px;border-radius:22px;background:rgba(255,246,214,.1);border:2px dashed rgba(246,198,27,.55);text-align:center}
+.spinner{display:block;width:54px;height:54px;margin:0 auto 14px;border-radius:50%;border:6px solid rgba(246,198,27,.25);border-top-color:var(--gold);animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-title{margin:0;font-family:'Bagel Fat One','Arial Black',Impact,sans-serif;font-size:1.5rem;color:var(--gold)}
+.loader-sub{margin:6px 0 0;font-weight:700;font-size:1rem}
+.loader-err{margin:10px 0 0;font-size:.85rem;opacity:.85}
+@media (prefers-reduced-motion:reduce){.spinner{animation-duration:2.5s}}
+
+/* Dishes are links */
+.dish a{display:flex;flex-direction:column;align-items:center;gap:7px;width:100%;color:inherit;text-decoration:none;border-radius:14px;transition:transform .15s}
+.dish a:hover{transform:translateY(-3px)}
+.dish a:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.menu-info{margin:4px 0 2px}
+.menu-hint{margin:0 0 14px;text-align:center;font-size:.8rem;font-weight:700;color:var(--red);opacity:.85}
+.credit + .credit{margin-top:2px}

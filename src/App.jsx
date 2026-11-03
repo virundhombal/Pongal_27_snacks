@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react';
-import QRCode from 'qrcode';
 import Menu from './Menu.jsx';
 import { FEAST } from './menu.js';
 import { Img, TeamPongal, asset } from './ui.jsx';
@@ -7,11 +6,16 @@ import { Img, TeamPongal, asset } from './ui.jsx';
 const API = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 async function api(path, options) {
+  // Lookups give up after 12 s (so we can retry); order submissions are never cut short.
+  const ctrl = new AbortController();
+  const timer = options && options.method === 'POST' ? null : setTimeout(() => ctrl.abort(), 12000);
   let res;
   try {
-    res = await fetch(API + path, { ...options, headers: { 'Content-Type': 'application/json' } });
-  } catch {
-    throw new Error('Could not reach the server. Check your internet and try again.');
+    res = await fetch(API + path, { ...options, headers: { 'Content-Type': 'application/json' }, signal: ctrl.signal });
+  } catch (e) {
+    throw new Error(e.name === 'AbortError' ? 'The server is taking too long to respond.' : 'Could not reach the server. Check your internet and try again.');
+  } finally {
+    if (timer) clearTimeout(timer);
   }
   let data = {};
   try { data = await res.json(); } catch { /* empty body */ }
@@ -86,7 +90,14 @@ function Header({ framed }) {
 
 function Choose({ status, error, onChoose }) {
   if (!status) {
-    return <p className="note">{error || 'Loading…'}</p>;
+    return (
+      <div className="loader" role="status" aria-live="polite">
+        <span className="spinner" aria-hidden="true" />
+        <p className="loader-title">Loading…</p>
+        <p className="loader-sub">Meanwhile, take a look at the menu below &#8595;</p>
+        {error && <p className="loader-err">{error} Trying again…</p>}
+      </div>
+    );
   }
   const { prices, combo } = status;
   const low = combo.offerActive && combo.remaining <= 10;
@@ -137,21 +148,28 @@ export default function App() {
   const [copied, setCopied] = useState(false);
 
   const loadStatus = useCallback(async () => {
-    try { setStatus(await api('/api/status')); setStatusErr(''); }
-    catch (e) { setStatusErr(e.message); }
+    try { setStatus(await api('/api/status')); setStatusErr(''); return true; }
+    catch (e) { setStatusErr(e.message); return false; }
   }, []);
 
+  // Refresh every 30 s. If the server doesn't answer, retry every 4 s instead of waiting.
   useEffect(() => {
-    loadStatus();
-    const t = setInterval(loadStatus, 30000);
-    return () => clearInterval(t);
+    let timer;
+    let stopped = false;
+    const tick = async () => {
+      const ok = await loadStatus();
+      if (!stopped) timer = setTimeout(tick, ok ? 30000 : 4000);
+    };
+    tick();
+    return () => { stopped = true; clearTimeout(timer); };
   }, [loadStatus]);
 
   const payee = status && status.payees.find((p) => p.id === payeeId);
 
   useEffect(() => {
     if (step !== 'pay' || !payee) return;
-    QRCode.toDataURL(upiLink(payee, quoted), { width: 480, margin: 1, color: { dark: '#0f3350', light: '#ffffff' } })
+    import('qrcode') // loaded only when the payment screen opens, so the first screen is lighter
+      .then(({ default: QRCode }) => QRCode.toDataURL(upiLink(payee, quoted), { width: 480, margin: 1, color: { dark: '#0f3350', light: '#ffffff' } }))
       .then(setQrUrl)
       .catch(() => setQrUrl(''));
   }, [step, payee, quoted]);
@@ -268,6 +286,7 @@ export default function App() {
 
         <footer>
           <div>Happy Diwali &amp; Happy Pongal! 🪔</div>
+          <div className="credit">Artwork by Nandita</div>
           <div className="credit">Made with ❤️ by I2019ZF</div>
         </footer>
       </main>
