@@ -8,10 +8,12 @@ const API = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 async function api(path, options) {
   // Lookups wait up to 60 s for a slow server; order submissions are never cut short.
   const ctrl = new AbortController();
-  const timer = options && options.method === 'POST' ? null : setTimeout(() => ctrl.abort(), 60000);
+  const isPost = options && options.method === 'POST';
+  const timer = isPost ? null : setTimeout(() => ctrl.abort(), 60000);
   let res;
   try {
-    res = await fetch(API + path, { ...options, headers: { 'Content-Type': 'application/json' }, signal: ctrl.signal });
+    // A JSON content-type header makes the browser send an extra "preflight" request first, so only orders (POST) get it.
+    res = await fetch(API + path, { ...options, headers: isPost ? { 'Content-Type': 'application/json' } : undefined, signal: ctrl.signal });
   } catch (e) {
     throw new Error(e.name === 'AbortError' ? 'The server is taking too long to respond.' : 'Could not reach the server. Check your internet and try again.');
   } finally {
