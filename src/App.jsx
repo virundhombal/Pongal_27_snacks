@@ -114,7 +114,7 @@ function Choose({ status, error, waited, onChoose }) {
         {!live ? (
           <>
             <span className="price display checking"><span className="spinner sm" aria-hidden="true" />Checking offer…</span>
-            <span className="claimed">{waited ? 'The server is slow to wake up. Hang on, or order Snacks above.' : 'Checking how many offer spots are left…'}</span>
+            <span className="claimed">{waited ? 'The server is slow to wake up. Hang on, meanwhile checkout the feast menu.' : 'Checking how many offer spots are left…'}</span>
             <span className="cta">Please wait…</span>
           </>
         ) : (
