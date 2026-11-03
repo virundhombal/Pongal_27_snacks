@@ -1,0 +1,58 @@
+:root{--navy:#14405f;--deep:#0d2e47;--gold:#f6c61b;--saffron:#f29a1d;--cream:#fff6d6;--red:#c8362b}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:'DM Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:var(--cream);
+  background:radial-gradient(900px 420px at 50% -80px,#21608d 0,transparent 70%),var(--navy)}
+.display{font-family:'Bagel Fat One','Arial Black',Impact,sans-serif;font-weight:400;letter-spacing:.01em}
+.garland{height:46px;background:
+  radial-gradient(circle at 22px 22px,var(--saffron) 0 4px,var(--gold) 5px 14px,transparent 15px) 0 0/44px 46px repeat-x,
+  linear-gradient(#3b8f4a,#3b8f4a) 0 20px/100% 3px no-repeat}
+.wrap{max-width:520px;margin:0 auto;padding:8px 18px 40px}
+.hero{text-align:center;padding:14px 0 8px}
+.kicker{font-size:.9rem;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+.title{font-size:clamp(2.3rem,11vw,3.4rem);line-height:1.02;margin:10px 0 8px;color:var(--gold)}
+.title .x{color:var(--saffron);font-size:.6em;vertical-align:middle}
+.title .gold{display:block;color:var(--gold)}
+.meta{margin:0;font-weight:500;opacity:.95}
+.cards{display:grid;gap:16px;margin-top:22px}
+.card{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:10px;padding:20px;border-radius:22px;
+  background:var(--cream);color:var(--navy);box-shadow:0 10px 28px rgba(0,0,0,.28);transition:transform .15s,box-shadow .15s}
+.card:hover,.card:focus-visible{transform:translateY(-3px);box-shadow:0 16px 34px rgba(0,0,0,.34);outline:3px solid var(--gold)}
+.card.hot{background:linear-gradient(160deg,#ffe27a,var(--gold))}
+.card:disabled{cursor:not-allowed;opacity:.65;transform:none}
+.tag{align-self:flex-start;font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:99px;background:var(--navy);color:var(--cream)}
+.gold-tag{background:var(--red)}
+.card-title{font-size:1.45rem;line-height:1.1}
+.price{font-size:2.2rem;line-height:1}
+.price s{font-size:1.3rem;opacity:.55;margin-right:8px;text-decoration-thickness:3px;text-decoration-color:var(--red)}
+.claimed{font-size:.85rem;font-weight:700;display:flex;flex-direction:column;gap:6px}
+.bar{height:10px;border-radius:9px;background:rgba(20,64,95,.18);overflow:hidden;display:block}
+.bar i{display:block;height:100%;background:var(--red);border-radius:9px;transition:width .4s}
+.cta{font-weight:700;margin-top:2px}
+.note{text-align:center;opacity:.9;margin:8px 0}
+.panel{margin-top:22px;padding:22px;border-radius:22px;background:var(--cream);color:var(--navy);box-shadow:0 10px 28px rgba(0,0,0,.28)}
+.h2{font-size:1.5rem;margin:0 0 4px;color:var(--navy)}
+.h2.gap{margin-top:28px}
+.hint{margin:2px 0 12px;font-size:.92rem;opacity:.85}
+.center{text-align:center}
+.back{all:unset;cursor:pointer;font-weight:700;font-size:.9rem;margin-bottom:12px;display:inline-block}
+.back:focus-visible{outline:3px solid var(--saffron)}
+.qrbox{display:flex;justify-content:center;margin:12px 0 6px}
+.qrbox img,.qrph{width:240px;height:240px;border-radius:16px;border:6px solid var(--navy);background:#fff}
+.row{display:grid;gap:10px;margin-top:8px}
+.btn{all:unset;box-sizing:border-box;cursor:pointer;text-align:center;padding:14px 18px;border-radius:14px;font-weight:700;
+  background:var(--navy);color:var(--cream);transition:transform .12s,opacity .12s}
+.btn:hover{transform:translateY(-2px)}
+.btn:focus-visible{outline:3px solid var(--saffron)}
+.btn.ghost{background:transparent;color:var(--navy);border:2px solid var(--navy)}
+.btn.big{display:block;margin-top:6px;background:var(--red);font-size:1.05rem}
+.btn:disabled{opacity:.55;cursor:wait;transform:none}
+label{display:block;font-weight:700;font-size:.92rem;margin-top:14px}
+input{display:block;width:100%;margin-top:6px;padding:13px 14px;font:inherit;font-size:1rem;color:var(--navy);
+  background:#fff;border:2px solid rgba(20,64,95,.35);border-radius:12px}
+input:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(200,54,43,.2)}
+small{display:block;margin-top:5px;font-weight:400;opacity:.8}
+.err{min-height:1.4em;margin:12px 0 4px;color:var(--red);font-weight:700}
+.done{text-align:center}
+.diya{font-size:3.2rem}
+footer{text-align:center;margin-top:26px;opacity:.8;font-size:.9rem}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
