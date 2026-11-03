@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import QRCode from 'qrcode';
+import Menu from './Menu.jsx';
+import { FEAST } from './menu.js';
+import { TeamPongal } from './ui.jsx';
 
 const API = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
@@ -30,7 +33,7 @@ function check(f) {
 function Header() {
   return (
     <header className="hero">
-      <div className="kicker">Team Pongal presents</div>
+      <TeamPongal />
       <h1 className="display title">
         Diwali <span className="x">&times;</span> Pongal <span className="gold">Snacks</span>
       </h1>
@@ -49,7 +52,7 @@ function Choose({ status, error, onChoose }) {
     <section className="cards" aria-label="Choose your option">
       <button className="card" onClick={() => onChoose('snacks')}>
         <span className="tag">Snacks only</span>
-        <span className="card-title display">Kothu Parotta &amp; Sarbath Soda</span>
+        <span className="card-title display">Kothu Parotta &amp; Soda Sarbath</span>
         <span className="price display">₹{prices.snacks}</span>
         <span className="cta">Choose &rarr;</span>
       </button>
@@ -57,6 +60,7 @@ function Choose({ status, error, onChoose }) {
       <button className="card hot" onClick={() => onChoose('combo')} disabled={combo.closed}>
         <span className="tag gold-tag">Combo</span>
         <span className="card-title display">Snacks + Pongal Feast</span>
+        <span className="feast-line">Feast: {FEAST.info.date} &middot; {FEAST.info.venue} &middot; {FEAST.info.time}</span>
         {combo.closed ? (
           <span className="price display"><s>₹{prices.comboOffer}</s> Sold out</span>
         ) : combo.offerActive ? (
@@ -161,13 +165,14 @@ export default function App() {
         <Header />
 
         {step === 'choose' && <Choose status={status} error={statusErr} onChoose={choose} />}
+        {step === 'choose' && <Menu />}
 
         {step === 'pay' && payee && (
           <section className="panel">
             <button className="back" onClick={() => setStep('choose')}>&larr; Change option</button>
 
             <h2 className="display h2">1. Pay ₹{quoted}</h2>
-            <p className="hint">{option === 'combo' ? 'Snacks + Pongal Feast combo' : 'Kothu Parotta & Sarbath Soda'}</p>
+            <p className="hint">{option === 'combo' ? 'Snacks + Pongal Feast combo' : 'Kothu Parotta & Soda Sarbath'}</p>
             <div className="qrbox">
               {qrUrl ? <img src={qrUrl} alt={`UPI QR to pay ₹${quoted}`} width="240" height="240" /> : <div className="qrph" />}
             </div>
