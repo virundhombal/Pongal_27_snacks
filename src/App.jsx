@@ -310,7 +310,7 @@ export default function App() {
 
         <footer>
           <div>Happy Diwali &amp; Happy Pongal! 🪔</div>
-          <div className="credit">Artwork by Nandita</div>
+          <div className="credit">Designed by Nandita</div>
           <div className="credit">Made with ❤️ by I2019ZF</div>
         </footer>
       </main>
