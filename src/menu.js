@@ -1,6 +1,7 @@
 // Menu content from the posters. Image files go in public/assets/ (see README of assets):
 //   snacks/<id>.webp  and  feast/<id>.webp. A missing image just shows a plain circle.
-const s = (id, name) => ({ id, name, img: `snacks/${id}.webp` });
+// caption: true = the photo has no name on it, so the page adds one underneath
+const s = (id, name) => ({ id, name, img: `snacks/${id}.webp`, caption: true });
 const f = (id, name) => ({ id, name, img: `feast/${id}.webp` });
 
 export const SNACKS = {

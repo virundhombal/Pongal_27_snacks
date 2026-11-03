@@ -2,20 +2,25 @@ import { useState } from 'react';
 import { FEAST, SNACKS } from './menu.js';
 import { asset } from './ui.jsx';
 
-// The photo files already include the dish name, so show them as they are.
-// Only if a file is missing do we draw a plain circle with the name underneath.
+// Feast photos already include the dish name, so they are shown as they are.
+// Snack photos (caption: true) are shown in a circle with the name underneath.
+// If a file is missing we keep the circle and the name, so there is never a gap.
 function Dish({ item }) {
   const [ok, setOk] = useState(true);
+  const src = asset(item.img);
+  if (ok && !item.caption) {
+    return (
+      <li className="dish">
+        <img className="dish-photo" src={src} alt={item.name} loading="lazy" decoding="async" onError={() => setOk(false)} />
+      </li>
+    );
+  }
   return (
     <li className="dish">
-      {ok ? (
-        <img className="dish-photo" src={asset(item.img)} alt={item.name} loading="lazy" decoding="async" onError={() => setOk(false)} />
-      ) : (
-        <>
-          <span className="dish-img" />
-          <span className="dish-name">{item.name}</span>
-        </>
-      )}
+      <span className="dish-img">
+        {ok && <img src={src} alt="" loading="lazy" decoding="async" onError={() => setOk(false)} />}
+      </span>
+      <span className="dish-name">{item.name}</span>
     </li>
   );
 }
