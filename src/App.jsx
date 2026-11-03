@@ -19,8 +19,11 @@ async function api(path, options) {
   return data;
 }
 
+// true = the QR carries the amount; false = students type the amount themselves.
+const PREFILL_AMOUNT = true;
+
 const upiLink = (payee, amount) =>
-  `upi://pay?pa=${encodeURIComponent(payee.vpa)}&pn=${encodeURIComponent(payee.name)}&am=${amount}&cu=INR&tn=${encodeURIComponent('Pongal Snacks')}`;
+  `upi://pay?pa=${encodeURIComponent(payee.vpa)}&pn=${encodeURIComponent(payee.name)}${PREFILL_AMOUNT ? `&am=${amount}` : ''}&cu=INR&tn=${encodeURIComponent('Pongal Snacks')}`;
 
 function check(f) {
   if (f.name.length < 2 || f.name.length > 40) return 'Enter your name (2 to 40 characters).';
@@ -108,6 +111,7 @@ export default function App() {
   const [form, setForm] = useState({ name: '', rollNumber: '', emailId: '', utrId: '' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [copied, setCopied] = useState(false);
 
   const loadStatus = useCallback(async () => {
     try { setStatus(await api('/api/status')); setStatusErr(''); }
@@ -142,6 +146,16 @@ export default function App() {
   const switchPayee = () => {
     const ids = status.payees.map((p) => p.id);
     setPayeeId(ids[(ids.indexOf(payeeId) + 1) % ids.length]);
+  };
+
+  const copyId = async () => {
+    try {
+      await navigator.clipboard.writeText(payee.vpa);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* the UPI ID is shown as selectable text, so students can still copy it by hand */
+    }
   };
 
   const set = (k) => (e) => {
@@ -192,8 +206,9 @@ export default function App() {
               {qrUrl ? <img src={qrUrl} alt={`UPI QR to pay ₹${quoted}`} width="240" height="240" /> : <div className="qrph" />}
             </div>
             <p className="hint center">Paying to <b>{payee.name}</b></p>
+            <p className="upiid">UPI ID: <code>{payee.vpa}</code></p>
             <div className="row">
-              <a className="btn" href={upiLink(payee, quoted)}>Open UPI app</a>
+              <button className="btn" type="button" onClick={copyId}>{copied ? 'Copied ✓' : 'Copy UPI ID'}</button>
               <button className="btn ghost" type="button" onClick={switchPayee}>Payment not working? Try another QR</button>
             </div>
 
@@ -227,7 +242,10 @@ export default function App() {
           </section>
         )}
 
-        <footer>Happy Diwali &amp; Happy Pongal! 🪔</footer>
+        <footer>
+          <div>Happy Diwali &amp; Happy Pongal! 🪔</div>
+          <div className="credit">Made with ❤️ by I2019ZF</div>
+        </footer>
       </main>
     </>
   );
