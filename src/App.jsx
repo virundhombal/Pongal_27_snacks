@@ -6,9 +6,9 @@ import { Img, TeamPongal, asset } from './ui.jsx';
 const API = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 async function api(path, options) {
-  // Lookups give up after 12 s (so we can retry); order submissions are never cut short.
+  // Lookups wait up to 60 s for a slow server; order submissions are never cut short.
   const ctrl = new AbortController();
-  const timer = options && options.method === 'POST' ? null : setTimeout(() => ctrl.abort(), 12000);
+  const timer = options && options.method === 'POST' ? null : setTimeout(() => ctrl.abort(), 60000);
   let res;
   try {
     res = await fetch(API + path, { ...options, headers: { 'Content-Type': 'application/json' }, signal: ctrl.signal });
@@ -88,17 +88,28 @@ function Header({ framed }) {
   );
 }
 
+function Loader({ error }) {
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setSlow(true), 8000);
+    return () => clearTimeout(t);
+  }, []);
+  return (
+    <div className="loader" role="status" aria-live="polite">
+      <span className="spinner" aria-hidden="true" />
+      <p className="loader-title">Loading…</p>
+      <p className="loader-sub">Meanwhile, take a look at the menu below &#8595;</p>
+      {error ? (
+        <p className="loader-err">{error} Trying again…</p>
+      ) : (
+        slow && <p className="loader-err">Still waiting for the server. This is taking longer than usual.</p>
+      )}
+    </div>
+  );
+}
+
 function Choose({ status, error, onChoose }) {
-  if (!status) {
-    return (
-      <div className="loader" role="status" aria-live="polite">
-        <span className="spinner" aria-hidden="true" />
-        <p className="loader-title">Loading…</p>
-        <p className="loader-sub">Meanwhile, take a look at the menu below &#8595;</p>
-        {error && <p className="loader-err">{error} Trying again…</p>}
-      </div>
-    );
-  }
+  if (!status) return <Loader error={error} />;
   const { prices, combo } = status;
   const low = combo.offerActive && combo.remaining <= 10;
   return (
