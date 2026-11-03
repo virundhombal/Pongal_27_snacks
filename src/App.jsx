@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import Menu from './Menu.jsx';
 import { FEAST } from './menu.js';
-import { TeamPongal } from './ui.jsx';
+import { Img, TeamPongal, asset } from './ui.jsx';
 
 const API = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
@@ -30,15 +30,31 @@ function check(f) {
   return '';
 }
 
-function Header() {
-  return (
-    <header className="hero">
+function Header({ framed }) {
+  const text = (
+    <>
       <TeamPongal />
       <h1 className="display title">
-        Diwali <span className="x">&times;</span> Pongal <span className="gold">Snacks</span>
+        Diwali <span className="x">&times;</span>
+        <br />Pongal<br />
+        <span className="gold">Snacks</span>
       </h1>
       <p className="meta">Main Mess &middot; 12 Nov 2026 &middot; 5:00 PM onwards</p>
-    </header>
+    </>
+  );
+  if (framed) {
+    return (
+      <div className="frame">
+        <Img src="garland.webp" className="frame-img" loading="eager" />
+        <header className="hero">{text}</header>
+      </div>
+    );
+  }
+  return (
+    <>
+      <div className="strip" style={{ backgroundImage: `url(${asset('garland.webp')})` }} aria-hidden="true" />
+      <header className="hero small">{text}</header>
+    </>
   );
 }
 
@@ -160,9 +176,8 @@ export default function App() {
 
   return (
     <>
-      <div className="garland" aria-hidden="true" />
       <main className="wrap">
-        <Header />
+        <Header framed={step === 'choose'} />
 
         {step === 'choose' && <Choose status={status} error={statusErr} onChoose={choose} />}
         {step === 'choose' && <Menu />}

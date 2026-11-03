@@ -3,9 +3,6 @@
 body{margin:0;min-height:100vh;font-family:'DM Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:var(--cream);
   background:radial-gradient(900px 420px at 50% -80px,#21608d 0,transparent 70%),var(--navy)}
 .display{font-family:'Bagel Fat One','Arial Black',Impact,sans-serif;font-weight:400;letter-spacing:.01em}
-.garland{height:46px;background:
-  radial-gradient(circle at 22px 22px,var(--saffron) 0 4px,var(--gold) 5px 14px,transparent 15px) 0 0/44px 46px repeat-x,
-  linear-gradient(#3b8f4a,#3b8f4a) 0 20px/100% 3px no-repeat}
 .wrap{max-width:520px;margin:0 auto;padding:8px 18px 40px}
 .hero{text-align:center;padding:14px 0 8px}
 .kicker{font-size:.9rem;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
@@ -83,3 +80,20 @@ footer{text-align:center;margin-top:26px;opacity:.8;font-size:.9rem}
 .dishes.big .dish-img{width:min(100%,150px)}
 .dish-img img{width:100%;height:100%;object-fit:cover;display:block}
 .dish-name{font-size:.82rem;font-weight:700;line-height:1.2}
+
+/* Garland frame (full arch on the first screen, a thin strip afterwards) */
+.title .gold{display:inline}
+.frame{position:relative;margin:0 -18px;aspect-ratio:850/710;container-type:inline-size}
+.frame-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none}
+.frame .hero{position:absolute;left:17%;right:17%;top:25%;padding:0;display:flex;flex-direction:column;align-items:center}
+.frame .title{font-size:clamp(1.9rem,9.5vw,3rem);font-size:10cqw;margin:4px 0}
+.frame .meta{font-size:clamp(.72rem,3.2vw,.95rem);font-size:3.4cqw}
+.frame .team-line{font-size:clamp(.8rem,3.6vw,1rem);font-size:3.8cqw;gap:1.6cqw}
+.frame .team-logo{height:7cqw}
+.strip{margin:0 -18px;aspect-ratio:850/180;background-size:100% auto;background-position:top center;background-repeat:no-repeat}
+.hero.small .title{font-size:2rem;margin:8px 0 6px}
+.hero.small br{display:none}
+
+/* Dish photos come with the name baked in (transparent background) */
+.dishes{align-items:center}
+.dish-photo{display:block;width:100%;max-width:150px;height:auto}
