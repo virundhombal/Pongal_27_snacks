@@ -96,18 +96,23 @@ function Choose({ status, error, waited, onChoose }) {
   const prices = (status || FALLBACK).prices;
   const combo = status && status.combo;
   const low = combo && combo.offerActive && combo.remaining <= 10;
+  // Overall snack-coupon cap (status.snacks comes from the server; absent on an older server)
+  const snacks = status && status.snacks;
+  const snacksOut = !!(snacks && snacks.soldOut);
+  const snacksLow = !!(snacks && !snacks.soldOut && snacks.remaining <= 20);
   return (
     <section className="cards" aria-label="Choose your option">
       {/* Snacks has a fixed price, so it works the moment the page opens */}
-      <button className="card" onClick={() => onChoose('snacks')}>
+      <button className="card" onClick={() => onChoose('snacks')} disabled={snacksOut}>
         <span className="tag">Snacks only</span>
         <span className="card-title display">Kothu Parotta &amp; Soda Sarbath</span>
-        <span className="price display">₹{prices.snacks}</span>
-        <span className="cta">Choose &rarr;</span>
+        <span className="price display">{snacksOut ? 'Sold out' : `₹${prices.snacks}`}</span>
+        {snacksLow && <span className="claimed">Only {snacks.remaining} coupons left!</span>}
+        <span className="cta">{snacksOut ? 'Unavailable' : 'Choose →'}</span>
       </button>
 
       {/* Combo needs the live count of offer spots, so it waits for the server */}
-      <button className="card hot" onClick={() => onChoose('combo')} disabled={!live || combo.closed}>
+      <button className="card hot" onClick={() => onChoose('combo')} disabled={!live || combo.closed || snacksOut}>
         <span className="tag gold-tag">Combo</span>
         <span className="card-title display">Snacks + Pongal Feast</span>
         <span className="feast-line">Feast: {FEAST.info.date} &middot; {FEAST.info.venue} &middot; {FEAST.info.time}</span>
@@ -119,20 +124,27 @@ function Choose({ status, error, waited, onChoose }) {
           </>
         ) : (
           <>
-            {combo.closed ? (
-              <span className="price display"><s>₹{prices.comboOffer}</s> Sold out</span>
+            {combo.closed || snacksOut ? (
+              <span className="price display">Sold out</span>
             ) : combo.offerActive ? (
               <span className="price display"><s>₹{prices.comboRegular}</s> ₹{prices.comboOffer}</span>
             ) : (
-              <span className="price display"><s>₹{prices.comboOffer}</s> ₹{prices.comboRegular}</span>
+              /* offer is over: show the plain price only, no crossed-out amount */
+              <span className="price display">₹{prices.comboRegular}</span>
             )}
-            <span className="claimed">
-              <span className="bar"><i style={{ width: `${Math.min(100, (combo.sold / combo.limit) * 100)}%` }} /></span>
-              {combo.offerActive
-                ? `${combo.sold} of ${combo.limit} offer spots claimed${low ? ` · only ${combo.remaining} left!` : ''}`
-                : `All ${combo.limit} offer spots are gone`}
-            </span>
-            <span className="cta">{combo.closed ? 'Unavailable' : 'Choose →'}</span>
+            {combo.offerActive && !snacksOut && (
+              <span className="claimed">
+                <span className="bar"><i style={{ width: `${Math.min(100, (combo.sold / combo.limit) * 100)}%` }} /></span>
+                {`${combo.sold} of ${combo.limit} offer spots claimed${low ? ` · only ${combo.remaining} left!` : ''}`}
+              </span>
+            )}
+            {!combo.offerActive && !combo.closed && !snacksOut && (
+              <span className="claimed">The offer spots are over. Regular combo price applies.</span>
+            )}
+            {snacksOut && !combo.closed && (
+              <span className="claimed">Snack coupons are sold out, so the combo is unavailable too.</span>
+            )}
+            <span className="cta">{combo.closed || snacksOut ? 'Unavailable' : 'Choose →'}</span>
           </>
         )}
       </button>
@@ -186,6 +198,13 @@ export default function App() {
     return () => { stopped = true; clearTimeout(timer); };
   }, [loadStatus]);
 
+  // Back gesture / browser back from the payment or done screen goes to the options, without reloading the page
+  useEffect(() => {
+    const onPop = () => setStep((s) => (s === 'choose' ? s : 'choose'));
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
   const payees = (status || FALLBACK).payees;
   const payee = payees.find((p) => p.id === payeeId);
 
@@ -200,11 +219,13 @@ export default function App() {
   const choose = (opt) => {
     const { prices } = status || FALLBACK;
     if (opt === 'combo' && !status) return; // combo price depends on the live offer count
+    if (status && status.snacks && status.snacks.soldOut) return; // overall snack cap reached
     setOption(opt);
     setQuoted(opt === 'snacks' ? prices.snacks : status.combo.offerActive ? prices.comboOffer : prices.comboRegular);
     setPayeeId(payees[Math.floor(Math.random() * payees.length)].id); // spread payments across payees
     setError('');
     setStep('pay');
+    window.history.pushState({ pay: true }, ''); // so the phone's back gesture returns here instead of leaving the page
     window.scrollTo(0, 0);
   };
 
@@ -263,7 +284,7 @@ export default function App() {
 
         {step === 'pay' && payee && (
           <section className="panel">
-            <button className="back" onClick={() => setStep('choose')}>&larr; Change option</button>
+            <button className="back" onClick={() => window.history.back()}>&larr; Change option</button>
 
             <h2 className="display h2">1. Pay ₹{quoted}</h2>
             <p className="hint">{option === 'combo' ? 'Snacks + Pongal Feast combo' : 'Kothu Parotta & Soda Sarbath'}</p>
