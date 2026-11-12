@@ -135,7 +135,7 @@ function Choose({ status, error, waited, onChoose }) {
   // Overall snack-coupon cap (status.snacks comes from the server; absent on an older server)
   const snacks = status && status.snacks;
   const snacksOut = !!(snacks && snacks.soldOut);
-  const snacksLow = !!(snacks && !snacks.soldOut && snacks.remaining <= 15);
+  const snacksLow = !!(snacks && !snacks.soldOut && snacks.remaining <= 10);
   return (
     <section className="cards" aria-label="Choose your option">
       {/* Snacks has a fixed price, so it works the moment the page opens */}
