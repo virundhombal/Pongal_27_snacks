@@ -110,9 +110,11 @@ function Choose({ status, error, waited, onChoose }) {
 
   // Snacks sold out, 5 PM reached, or test switch on: only the Pongal Feast can be bought.
   if (status && status.feastOnly) {
-    const msg = status.feastOnlyReason === 'time'
-      ? 'Snack coupon sales are now closed. Come taste our Tamil Nadu food at our Pongal Feast!'
-      : 'Sorry, the snack coupons are over! Taste our Tamil Nadu food through our Pongal Feast.';
+    const msg = status.feastOnlyReason === 'closed'
+      ? 'Snack coupons are closed. On-spot coupons might be available, based on availability. Meanwhile, you can purchase a confirmed Pongal Feast coupon.'
+      : status.feastOnlyReason === 'time'
+        ? 'Snack coupon sales are now closed. Come taste our Tamil Nadu food at our Pongal Feast!'
+        : 'Sorry, the snack coupons are over! Taste our Tamil Nadu food through our Pongal Feast.';
     return (
       <section className="cards" aria-label="Choose your option">
         {status.test && <p className="note test-note">TEST MODE: feast-only is forced by FEAST_ONLY_TEST</p>}
@@ -240,6 +242,8 @@ export default function App() {
   }, []);
 
   const feastOnly = !!(status && status.feastOnly);
+  // Manual close (SNACKS_CLOSED): the snacks event is still on, so keep the snacks header and menu
+  const snacksStay = !!(status && status.feastOnlyReason === 'closed');
   const payees = (status || FALLBACK).payees;
   const payee = payees.find((p) => p.id === payeeId);
 
@@ -316,10 +320,10 @@ export default function App() {
   return (
     <>
       <main className="wrap">
-        <Header framed={step === 'choose'} feast={step === 'choose' ? feastOnly : option === 'feast'} />
+        <Header framed={step === 'choose'} feast={step === 'choose' ? feastOnly && !snacksStay : option === 'feast'} />
 
         {step === 'choose' && <Choose status={status} error={statusErr} waited={waited} onChoose={choose} />}
-        {step === 'choose' && <Menu feastOnly={feastOnly} />}
+        {step === 'choose' && <Menu feastOnly={feastOnly} keepSnacks={snacksStay} />}
 
         {step === 'pay' && payee && (
           <section className="panel">

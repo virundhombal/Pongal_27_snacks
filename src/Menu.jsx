@@ -66,15 +66,16 @@ const Info = ({ info }) => (
   </>
 );
 
-export default function Menu({ feastOnly = false }) {
+export default function Menu({ feastOnly = false, keepSnacks = false }) {
   const [pickedTab, setTab] = useState('snacks');
   // Feast-only mode: the Snacks tab (and the tab bar) is removed, only the Pongal Feast menu shows
-  const tab = feastOnly ? 'feast' : pickedTab;
+  const onlyFeast = feastOnly && !keepSnacks; // keepSnacks: snacks closed manually, snacks menu stays
+  const tab = onlyFeast ? 'feast' : pickedTab;
   const tabs = [['snacks', 'Snacks'], ['feast', 'Pongal Feast']];
   return (
     <section className="menu" aria-label="Menu">
       <h2 className="display menu-title">What's on the menu</h2>
-      {!feastOnly && <div className="tabs" role="tablist">
+      {!onlyFeast && <div className="tabs" role="tablist">
         {tabs.map(([id, label]) => (
           <button key={id} role="tab" aria-selected={tab === id} className={tab === id ? 'tab on' : 'tab'} onClick={() => setTab(id)}>
             {label}
