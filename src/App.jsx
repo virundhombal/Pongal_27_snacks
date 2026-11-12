@@ -29,8 +29,8 @@ async function api(path, options) {
 // true = the QR carries the amount; false = students type the amount themselves.
 const PREFILL_AMOUNT = true;
 
-const upiLink = (payee, amount) =>
-  `upi://pay?pa=${encodeURIComponent(payee.vpa)}&pn=${encodeURIComponent(payee.name)}${PREFILL_AMOUNT ? `&am=${amount}` : ''}&cu=INR&tn=${encodeURIComponent('Pongal Snacks')}`;
+const upiLink = (payee, amount, note = 'Pongal Snacks') =>
+  `upi://pay?pa=${encodeURIComponent(payee.vpa)}&pn=${encodeURIComponent(payee.name)}${PREFILL_AMOUNT ? `&am=${amount}` : ''}&cu=INR&tn=${encodeURIComponent(note)}`;
 
 function check(f) {
   if (f.name.length < 2 || f.name.length > 40) return 'Enter your name (2 to 40 characters).';
@@ -51,7 +51,7 @@ function SnacksTitle({ fallback }) {
   );
 }
 
-function Header({ framed }) {
+function Header({ framed, feast }) {
   const textTitle = (
     <h1 className="display title">
       Diwali <span className="x">&times;</span>
@@ -59,7 +59,20 @@ function Header({ framed }) {
       <span className="gold">Snacks</span>
     </h1>
   );
-  const meta = (
+  // Once the page is feast-only, the header is about the feast (not the 12 Nov snacks)
+  const feastTitle = (
+    <h1 className="display title">
+      Pongal<br />2027<br />
+      <span className="gold">Virundhu</span>
+    </h1>
+  );
+  const meta = feast ? (
+    <p className="meta">
+      <span>{FEAST.info.venue} &middot; {FEAST.info.date}</span>
+      <span className="sep"> &middot; </span>
+      <span>{FEAST.info.time}</span>
+    </p>
+  ) : (
     <p className="meta">
       <span>Main Mess &middot; 12 Nov 2026</span>
       <span className="sep"> &middot; </span>
@@ -73,7 +86,7 @@ function Header({ framed }) {
         <Img src="diya-hanging.webp" className="frame-diya" loading="eager" />
         <header className="hero">
           <TeamPongal />
-          <SnacksTitle fallback={textTitle} />
+          {feast ? feastTitle : <SnacksTitle fallback={textTitle} />}
           {meta}
         </header>
       </div>
@@ -84,7 +97,7 @@ function Header({ framed }) {
       <div className="strip" style={{ backgroundImage: `url(${asset('garland.webp')})` }} aria-hidden="true" />
       <header className="hero small">
         <TeamPongal />
-        {textTitle}
+        {feast ? feastTitle : textTitle}
         {meta}
       </header>
     </>
@@ -94,12 +107,33 @@ function Header({ framed }) {
 function Choose({ status, error, waited, onChoose }) {
   const live = !!status;
   const prices = (status || FALLBACK).prices;
+
+  // Snacks sold out, 5 PM reached, or test switch on: only the Pongal Feast can be bought.
+  if (status && status.feastOnly) {
+    const msg = status.feastOnlyReason === 'time'
+      ? 'Snack coupon sales are now closed. Come taste our Tamil Nadu food at our Pongal Feast!'
+      : 'Sorry, the snack coupons are over! Taste our Tamil Nadu food through our Pongal Feast.';
+    return (
+      <section className="cards" aria-label="Choose your option">
+        {status.test && <p className="note test-note">TEST MODE: feast-only is forced by FEAST_ONLY_TEST</p>}
+        <p className="note feast-note" role="status">{msg}</p>
+        <button className="card hot" onClick={() => onChoose('feast')}>
+          <span className="tag gold-tag">Pongal Feast</span>
+          <span className="card-title display">{FEAST.title}</span>
+          <span className="feast-line">{FEAST.info.date} &middot; {FEAST.info.venue} &middot; {FEAST.info.time}</span>
+          <span className="price display">₹{prices.feast}</span>
+          <span className="cta">Choose →</span>
+        </button>
+      </section>
+    );
+  }
+
   const combo = status && status.combo;
   const low = combo && combo.offerActive && combo.remaining <= 10;
   // Overall snack-coupon cap (status.snacks comes from the server; absent on an older server)
   const snacks = status && status.snacks;
   const snacksOut = !!(snacks && snacks.soldOut);
-  const snacksLow = !!(snacks && !snacks.soldOut && snacks.remaining <= 10);
+  const snacksLow = !!(snacks && !snacks.soldOut && snacks.remaining <= 15);
   return (
     <section className="cards" aria-label="Choose your option">
       {/* Snacks has a fixed price, so it works the moment the page opens */}
@@ -205,23 +239,28 @@ export default function App() {
     return () => window.removeEventListener('popstate', onPop);
   }, []);
 
+  const feastOnly = !!(status && status.feastOnly);
   const payees = (status || FALLBACK).payees;
   const payee = payees.find((p) => p.id === payeeId);
 
   useEffect(() => {
     if (step !== 'pay' || !payee) return;
     import('qrcode') // loaded only when the payment screen opens, so the first screen is lighter
-      .then(({ default: QRCode }) => QRCode.toDataURL(upiLink(payee, quoted), { width: 480, margin: 1, color: { dark: '#0f3350', light: '#ffffff' } }))
+      .then(({ default: QRCode }) => QRCode.toDataURL(upiLink(payee, quoted, option === 'feast' ? 'Pongal Feast' : 'Pongal Snacks'), { width: 480, margin: 1, color: { dark: '#0f3350', light: '#ffffff' } }))
       .then(setQrUrl)
       .catch(() => setQrUrl(''));
-  }, [step, payee, quoted]);
+  }, [step, payee, quoted, option]);
 
   const choose = (opt) => {
     const { prices } = status || FALLBACK;
-    if (opt === 'combo' && !status) return; // combo price depends on the live offer count
-    if (status && status.snacks && status.snacks.soldOut) return; // overall snack cap reached
+    if (opt === 'feast') {
+      if (!status || !status.feastOnly) return; // feast-only tickets open with the switchover
+    } else {
+      if (opt === 'combo' && !status) return; // combo price depends on the live offer count
+      if (status && (status.feastOnly || (status.snacks && status.snacks.soldOut))) return; // snacks are closed
+    }
     setOption(opt);
-    setQuoted(opt === 'snacks' ? prices.snacks : status.combo.offerActive ? prices.comboOffer : prices.comboRegular);
+    setQuoted(opt === 'feast' ? prices.feast : opt === 'snacks' ? prices.snacks : status.combo.offerActive ? prices.comboOffer : prices.comboRegular);
     setPayeeId(payees[Math.floor(Math.random() * payees.length)].id); // spread payments across payees
     setError('');
     setStep('pay');
@@ -277,17 +316,17 @@ export default function App() {
   return (
     <>
       <main className="wrap">
-        <Header framed={step === 'choose'} />
+        <Header framed={step === 'choose'} feast={step === 'choose' ? feastOnly : option === 'feast'} />
 
         {step === 'choose' && <Choose status={status} error={statusErr} waited={waited} onChoose={choose} />}
-        {step === 'choose' && <Menu />}
+        {step === 'choose' && <Menu feastOnly={feastOnly} />}
 
         {step === 'pay' && payee && (
           <section className="panel">
             <button className="back" onClick={() => window.history.back()}>&larr; Change option</button>
 
             <h2 className="display h2">1. Pay ₹{quoted}</h2>
-            <p className="hint">{option === 'combo' ? 'Snacks + Pongal Feast combo' : 'Kothu Parotta & Soda Sarbath'}</p>
+            <p className="hint">{option === 'combo' ? 'Snacks + Pongal Feast combo' : option === 'feast' ? 'Pongal Feast' : 'Kothu Parotta & Soda Sarbath'}</p>
             <div className="qrbox">
               {qrUrl ? <img src={qrUrl} alt={`UPI QR to pay ₹${quoted}`} width="240" height="240" /> : <div className="qrph" />}
             </div>
@@ -321,7 +360,9 @@ export default function App() {
             <p>
               {option === 'combo'
                 ? 'Two QR codes are on their way to your email, one for the Snacks and one for the Pongal Feast, in two separate emails.'
-                : 'Your Snacks QR code is on its way to your email.'}
+                : option === 'feast'
+                  ? 'Your Pongal Feast QR code is on its way to your email.'
+                  : 'Your Snacks QR code is on its way to your email.'}
             </p>
             <p className="hint">It usually arrives within a couple of minutes. Check spam if you can't see it. Show the QR at the counter, one use only.</p>
             <p className="blessing" lang="ta">“வாழ்க வளமுடன்”</p>

@@ -66,19 +66,21 @@ const Info = ({ info }) => (
   </>
 );
 
-export default function Menu() {
-  const [tab, setTab] = useState('snacks');
+export default function Menu({ feastOnly = false }) {
+  const [pickedTab, setTab] = useState('snacks');
+  // Feast-only mode: the Snacks tab (and the tab bar) is removed, only the Pongal Feast menu shows
+  const tab = feastOnly ? 'feast' : pickedTab;
   const tabs = [['snacks', 'Snacks'], ['feast', 'Pongal Feast']];
   return (
     <section className="menu" aria-label="Menu">
       <h2 className="display menu-title">What's on the menu</h2>
-      <div className="tabs" role="tablist">
+      {!feastOnly && <div className="tabs" role="tablist">
         {tabs.map(([id, label]) => (
           <button key={id} role="tab" aria-selected={tab === id} className={tab === id ? 'tab on' : 'tab'} onClick={() => setTab(id)}>
             {label}
           </button>
         ))}
-      </div>
+      </div>}
 
       <div className="menu-card" role="tabpanel">
         {tab === 'snacks' ? (
@@ -91,12 +93,16 @@ export default function Menu() {
           <>
             <FeastTitle />
             <Info info={FEAST.info} />
-            {FEAST.sections.map((sec) => (
-              <div key={sec.name}>
-                <h4 className="sec">{sec.name}</h4>
-                <ul className="dishes">{sec.items.map((it) => <Dish key={it.id} item={it} />)}</ul>
-              </div>
-            ))}
+            {FEAST.sections.map((sec) => {
+              // Feast-only mode: Salt is left off the menu
+              const items = feastOnly ? sec.items.filter((it) => it.id !== 'salt') : sec.items;
+              return (
+                <div key={sec.name}>
+                  <h4 className="sec">{sec.name}</h4>
+                  <ul className="dishes">{items.map((it) => <Dish key={it.id} item={it} />)}</ul>
+                </div>
+              );
+            })}
           </>
         )}
       </div>
